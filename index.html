@@ -1,4 +1,6 @@
 
+            Bin level is normal.
+        </div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -394,6 +396,13 @@ footer {
     </div>
 
     <!-- SUMMARY CARDS -->
+     <div class="card">
+    <h3>Soil Moisture</h3>
+    <div class="value">
+        <span id="moistureValue">831</span>
+    </div>
+    <p class="note">Raw sensor value</p>
+</div>
     <div class="cards">
 
         <div class="card">
@@ -411,6 +420,13 @@ footer {
             <div class="value">
                 <span id="distanceValue">20</span> cm
             </div>
+        </div>    
+            <div class="card">
+            <h3>Bin Distance</h3>
+            <div class="value">
+                <span id="binDistanceValue">30</span> cm
+            </div>
+            <p class="note">Distance from sensor to waste</p>
         </div>
 
         <div class="card">
@@ -419,7 +435,12 @@ footer {
         </div>
 
     </div>
-
+<div 
+    <p>
+        Moisture Value:
+        <strong id="moistureReading">831</strong>
+    </p>
+</div>
     <!-- WASTE MONITORING -->
     <div class="panel">
         <h2>Waste Monitoring</h2>
@@ -481,8 +502,6 @@ footer {
 
         <div id="binAlert">Bin Status: Normal</div>
         <div id="binPanelAlert">
-            Bin level is normal.
-        </div>
     </div>
 
     <!-- NOTIFICATIONS -->
@@ -510,7 +529,32 @@ footer {
             <canvas id="wasteChart"></canvas>
         </div>
     </div>
+<!-- WASTE STATISTICS -->
+<div class="panel">
+    <h2>Waste Statistics</h2>
+    <p class="note">Wet and Dry Waste Comparison</p>
 
+    <div style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:30px;
+        flex-wrap:wrap;
+        padding:20px;
+    ">
+        <div id="wastePieChart" style="
+            width:180px;
+            height:180px;
+            border-radius:50%;
+            background:conic-gradient(#198754 0% 60%, #2878d0 60% 100%);
+        "></div>
+
+        <div>
+            <p>🟢 Wet Waste</p>
+            <p>🔵 Dry Waste</p>
+        </div>
+    </div>
+</div>
     <!-- SENSOR CONTROL -->
     <div class="panel">
         <h2>Sensor Control</h2>
@@ -532,7 +576,11 @@ footer {
             </select>
         </div>
     </div>
-
+<div class="card">
+    <h3>Bin Distance</h3>
+    <div class="value" id="binDistanceValue">30 cm</div>
+    <p class="note">Distance from sensor to waste</p>
+</div>
     <!-- OUTPUT STATUS -->
     <div class="panel">
         <h2>Output Status</h2>
@@ -559,7 +607,45 @@ footer {
 
         </div>
     </div>
+<!-- WASTE COLLECTION HISTORY -->
+<div class="panel">
+    <h2>Waste Collection History</h2>
 
+    <table border="1" width="100%" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Wet Waste</th>
+                <th>Dry Waste</th>
+            </tr>
+        </thead>
+
+        <tbody id="historyTable">
+            <tr>
+                <td colspan="3">No history available yet.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- ALERT HISTORY -->
+<div class="panel">
+    <h2>Alert History</h2>
+
+    <table border="1" width="100%" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Alert Message</th>
+            </tr>
+        </thead>
+
+        <tbody id="alertHistoryTable">
+            <tr>
+                <td colspan="2">No alerts recorded yet.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
     <!-- SYSTEM ALERTS -->
     <div class="panel">
         <h2>System Alerts</h2>
@@ -582,6 +668,9 @@ footer {
                     onclick="downloadReport()">
                 Download Demo Report
             </button>
+            <button class="dark-button" onclick="resetDemo()">
+    Reset Demo
+</button>
         </div>
 
         <br>
@@ -738,11 +827,25 @@ function enableNotifications() {
         }
     });
 }
+/* RECORD ALERT HISTORY */
+function recordAlert(message) {
+    const table = document.getElementById("alertHistoryTable");
 
+    if (table.innerText.includes("No alerts recorded yet.")) {
+        table.innerHTML = "";
+    }
+
+    const row = table.insertRow(0);
+
+    row.insertCell(0).innerText =
+        new Date().toLocaleString("en-IN");
+
+    row.insertCell(1).innerText = message;
+}
 /* BIN LEVEL ALERT */
 let binAlertActive = false;
 
-function updateBinLevel() {
+() {function updateBinLevel
     const level = Number(
         document.getElementById("binLevelSelect").value
     );
@@ -756,7 +859,11 @@ function updateBinLevel() {
     binBar.style.width = level + "%";
 
     if (level >= 90) {
-
+      if (level ===100) {
+         playBeep(2);
+          } else {
+             playBeep(1);
+        }
         binBar.style.background = "#dc3545";
 
         document.getElementById("binAlert").innerText =
@@ -772,6 +879,11 @@ function updateBinLevel() {
             "#ffe5e5";
 
         /* SEND ONLY ONE ALERT UNTIL LEVEL RETURNS TO NORMAL */
+       recordAlert(
+    level === 100
+        ? "Bin Full Alert (100%)"
+        : "Almost Full Alert (90%)"
+);
         if (!binAlertActive) {
 
             if (
@@ -888,7 +1000,42 @@ function drawLineGraph() {
     ctx.fillStyle = "#2878d0";
     ctx.fillText("Dry Waste", left + 100, height - 8);
 }
+/* WASTE COLLECTION HISTORY */
+function recordHistory(wet, dry) {
+    const table = document.getElementById("historyTable");
 
+    if (table.innerText.includes("No history available yet.")) {
+        table.innerHTML = "";
+    }
+
+    const row = table.insertRow(0);
+
+    const dateCell = row.insertCell(0);
+    const wetCell = row.insertCell(1);
+    const dryCell = row.insertCell(2);
+
+    dateCell.innerText = new Date().toLocaleString("en-IN");
+    wetCell.innerText = wet + "%";
+    dryCell.innerText = dry + "%";
+}
+/* UPDATE WASTE PIE CHART */
+function updatePieChart(wet, dry) {
+    const total = wet + dry;
+
+    if (total === 0) {
+        document.getElementById("wastePieChart").style.background =
+            "#dddddd";
+        return;
+    }
+
+    const wetAngle = (wet / total) * 360;
+
+    document.getElementById("wastePieChart").style.background =
+        `conic-gradient(
+            #198754 0deg ${wetAngle}deg,
+            #2878d0 ${wetAngle}deg 360deg
+        )`;
+}
 /* UPDATE DEMO READINGS */
 function updateDemo() {
     const wet = Math.floor(Math.random() * 101);
@@ -915,10 +1062,13 @@ function updateWaste(wet, dry) {
 
     document.getElementById("dryBar").style.width =
         dry + "%";
-
-    wetHistory.push(wet);
+   
+        updatePieChart(wet, dry);
+        updateMoisture(wet, dry);
+        wetHistory.push(wet);
     dryHistory.push(dry);
 
+    recordHistory(wet, dry);
     if (wetHistory.length > 10) {
         wetHistory.shift();
         dryHistory.shift();
@@ -949,7 +1099,18 @@ function downloadReport() {
 
     const bin =
         document.getElementById("binLevel").innerText;
+let binFill = parseInt(
+    document.getElementById("binLevel").innerText
+);
 
+let binHeight = 30;
+
+let binDistance = Math.round(
+    binHeight * (100 - binFill) / 100
+);
+
+document.getElementById("binDistanceValue").innerText =
+    binDistance;
     const servo =
         document.getElementById("servoStatus").innerText;
 
@@ -989,7 +1150,44 @@ function downloadReport() {
 
     URL.revokeObjectURL(url);
 }
+function resetDemo() {
+    // Reset waste readings
+    document.getElementById("wetValue").textContent = "45%";
+    document.getElementById("dryValue").textContent = "30%";
 
+    document.getElementById("wetBar").style.width = "45%";
+    document.getElementById("dryBar").style.width = "30%";
+
+    // Clear graph data
+    wetHistory = [];
+    dryHistory = [];
+    drawLineGraph();
+
+    // Clear history tables
+    document.getElementById("historyTable").innerHTML =
+        '<tr><td colspan="3">No history available yet.</td></tr>';
+
+    document.getElementById("alertHistoryTable").innerHTML =
+        '<tr><td colspan="2">No alerts recorded yet.</td></tr>';
+
+    // Reset sensor and bin
+    document.getElementById("distanceSelect").value = "20";
+    simulateSensor();
+
+    document.getElementById("binLevelSelect").value = "75";
+    binAlertActive = false;
+    updateBinLevel();
+
+    alert("Demo values reset successfully!");
+}
+function updateMoisture(wet, dry) {
+    const moisture = Math.round(
+        (wet / (wet + dry)) * 1023
+    );
+
+    document.getElementById("moistureValue").textContent =
+        moisture;
+}
 /* INITIAL DISPLAY */
 updateWaste(45, 30);
 updateBinLevel();
@@ -1000,7 +1198,21 @@ updateLastUpdated();
 window.addEventListener("resize", () => {
     drawLineGraph();
 });
+function playBeep(count) {
+    const audio = new AudioContext();
 
+    for (let i = 0; i < count; i++) {
+        const oscillator = audio.createOscillator();
+        oscillator.connect(audio.destination);
+        oscillator.frequency.value = 800;
+
+        const startTime = audio.currentTime + i * 0.5;
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.2);
+    }
+
+    setTimeout(() => audio.close(), count * 500 + 200);
+}
 </script>
 
 </body>
